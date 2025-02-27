@@ -11,22 +11,21 @@ export interface Question {
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
+  allAnswers: string[]
 }
 
 const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<string[]>([]);
-  const [currentAnswers, setCurrentAnswers] = useState<{
-    [key: number]: string;
-  }>({});
-  const [showSubmit, setShowSubmit] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     fetch("https://opentdb.com/api_category.php")
       .then((response) => response.json())
-      .then((data) => setCategories(data.trivia_categories))
+      .then((data) => {
+        setCategories(data.trivia_categories);
+        setIsLoading(false);
+      })
       .catch((error) => console.error("Error fetching categories:", error));
   }, []);
 
@@ -40,29 +39,25 @@ const App: React.FC = () => {
       .then((response) => response.json())
       .then((data) => {
         setQuestions(data.results);
-        setAnswers(Array(5).fill(""));
       })
       .catch((error) => console.error("Error fetching questions:", error));
   };
 
-  const handleAnswerClick = (questionIndex: number, answer: string) => {
-    const updatedAnswers = [...answers];
-    updatedAnswers[questionIndex] = answer;
-    setAnswers(updatedAnswers);
-    setCurrentAnswers({ ...currentAnswers, [questionIndex]: answer });
-    if (updatedAnswers.filter((a) => a).length === questions.length) {
-      setShowSubmit(true);
-    }
-  };
 
   return (
     <div className="App">
       <h1>QUIZ MARKER</h1>
-      <TriviaCategory
-        categories={categories}
-        handleCreateQuiz={handleCreateQuiz}
-      />
-      <Quiz questions={questions} />
+      {isLoading ? (
+        <div> Loading ...</div>
+      ) : (
+        <div>
+          <TriviaCategory
+            categories={categories}
+            handleCreateQuiz={handleCreateQuiz}
+          />
+          {questions.length > 0 && <Quiz questions={questions} />}
+        </div>
+      )}
     </div>
   );
 };
