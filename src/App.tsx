@@ -11,23 +11,30 @@ export interface Question {
   question: string;
   correct_answer: string;
   incorrect_answers: string[];
-  allAnswers: string[]
+  allAnswers: string[];
 }
 
 const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [createANewQuiz, setCreateANewQuiz] = useState(true);
 
   useEffect(() => {
-    fetch("https://opentdb.com/api_category.php")
-      .then((response) => response.json())
-      .then((data) => {
-        setCategories(data.trivia_categories);
-        setIsLoading(false);
-      })
-      .catch((error) => console.error("Error fetching categories:", error));
-  }, []);
+    if (createANewQuiz) {
+      setIsLoading(true);
+      fetch("https://opentdb.com/api_category.php")
+        .then((response) => response.json())
+        .then((data) => {
+          setCategories(data.trivia_categories);
+        })
+        .catch((error) => console.error("Error fetching categories:", error))
+        .finally(() => {
+          setCreateANewQuiz(false);
+          setIsLoading(false);
+        });
+    }
+  }, [createANewQuiz]);
 
   const handleCreateQuiz = (
     selectedCategory: string,
@@ -43,7 +50,6 @@ const App: React.FC = () => {
       .catch((error) => console.error("Error fetching questions:", error));
   };
 
-
   return (
     <div className="App">
       <h1>QUIZ MARKER</h1>
@@ -55,7 +61,7 @@ const App: React.FC = () => {
             categories={categories}
             handleCreateQuiz={handleCreateQuiz}
           />
-          {questions.length > 0 && <Quiz questions={questions} />}
+          {questions.length > 0 && <Quiz questions={questions} setCreateANewQuiz={setCreateANewQuiz}/>}
         </div>
       )}
     </div>
